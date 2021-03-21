@@ -133,7 +133,7 @@ handle_info(_Msg={accept, Socket}, ST) ->
 
 handle_info(_Msg=handshake, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
-  ok = inet:setopts(ST#s_t.socket, [{active, false}, binary]),  % just in case
+  ok = inet:setopts(ST#s_t.socket, [{active, false}, binary]),
   Self = self(),
   Pid  = spawn(fun() -> 
       receive
@@ -150,7 +150,6 @@ handle_info(_Msg=handshake, ST) ->
 
 handle_info(_Msg={handshake, TLSSocket}, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
-  % ok = inet:setopts(ST#s_t.socket, [{active, true}, binary]),
   ok = ssl:setopts(TLSSocket, [{active, true}]),
   {noreply, ST#s_t{tls_socket = TLSSocket}};
 
