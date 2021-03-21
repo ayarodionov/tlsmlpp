@@ -158,6 +158,14 @@ handle_info(_Msg={ssl, _, _Data}, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST};
 
+handle_info(_Msg={tcp, _Port, _Data}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  {noreply, ST};
+
+handle_info(_Msg={tcp_closed, _Port}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  {noreply, ST};
+
 handle_info(_Msg, ST) ->
   ?LOG_ERROR("~p: unknown message=~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST}.
@@ -179,11 +187,11 @@ terminate(_Msg, ST) ->
 ?RECORD_TF_MAP(s_t).
 
 %-----------------------------------------------------------------------------------------------
-% tcp_server:start(qq, {"127.0.0.1", 9999}).
-% tcp_server:get_status(qq).
+% tcp_server:start(ss, {"127.0.0.1", 9999}).
+% tcp_server:get_status(ss).
 
 %-----------------------------------------------------------------------------------------------
-% tcp_server:start(qq, {"127.0.0.1", 9999}, []).
-% tcp_server:get_status(qq).
+% tcp_server:start(ss, {"127.0.0.1", 9999}, []).
+% tcp_server:get_status(ss).
 
 %-----------------------------------------------------------------------------------------------

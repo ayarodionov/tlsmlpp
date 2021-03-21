@@ -14,6 +14,7 @@
 %-----------------------------------------------------------------------------------------------
 -export([ start_link/2, start_link/3, init/1]).
 -export([handle_cast/2, handle_call/3, handle_info/2, terminate/2]).
+-export([send/2]).
 -export([get_status/1]).
 
 %-----------------------------------------------------------------------------------------------
@@ -76,7 +77,16 @@ init({Name, {Addr, Port}, Credits})  ->
   {ok, ST}.
 
 %-----------------------------------------------------------------------------------------------
--spec get_status(atom()) -> map().
+-spec send(atom(), string() | binary()) -> ok.
+% @doc sends data over tcp or ssl socket.
+% @param Name registered name 
+% @param Data data to be send
+% @return ok 
+send(Name, Data) ->
+    gen_server:cast(Name, {send, Data}).
+
+%-----------------------------------------------------------------------------------------------
+-spec get_status(atom()) -> s_t().
 % @doc Gets and print state record. For debugging only.
 % @param Name registered name 
 % @return current state 
@@ -89,6 +99,26 @@ get_status(Name) ->
 -spec handle_cast(term(), s_t()) -> term().
 % @doc Whenever a <i>gen_server</i> process receives a request sent using <i>cast/2</i>, 
 % this function is called to handle the request.
+handle_cast(_Msg={send, Data}, ST) when ST#s_t.credits == [] andalso ST#s_t.socket /= false ->
+  ?LOG_DEBUG("~p: gen_tcp:send: ~p~n", [?FUNCTION_NAME, _Msg]),
+  case gen_tcp:send(ST#s_t.socket, Data) of
+    ok -> ok;
+    Error -> ?LOG_ERROR("~p: message was not send", [?FUNCTION_NAME, Data, Error])
+  end,
+  {noreply, ST};
+
+handle_cast(_Msg={send, Data}, ST) when ST#s_t.tls_socket /= false ->
+  ?LOG_DEBUG("~p: ssl:send: ~p~n", [?FUNCTION_NAME, _Msg]),
+  case ssl:send(ST#s_t.tls_socket, Data) of
+    ok -> ok;
+    Error -> ?LOG_ERROR("~p: message ~p was not send; reason: ~p~n", [?FUNCTION_NAME, Data, Error])
+  end,
+  {noreply, ST};
+
+handle_cast(_Msg={send, _Data}, ST) ->
+  ?LOG_ERROR("~p: socket is not opened; message=~p was not sent~n", [?FUNCTION_NAME, _Msg]),
+  {noreply, ST};
+
 handle_cast(_Msg, ST) ->
   ?LOG_ERROR("~p: unknown message=~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST}.
@@ -171,9 +201,11 @@ terminate(_Msg, ST) ->
 %-----------------------------------------------------------------------------------------------
 % tcp_client:start(cc, {"127.0.0.1", 9999}).
 % tcp_server:get_status(cc).
+% tcp_client:send(cc, "Hellow server!").
 
 %-----------------------------------------------------------------------------------------------
 % tcp_client:start(cc, {"127.0.0.1", 9999}, []).
+% tcp_client:send(cc, "Hellow server!").
 % tcp_client:get_status(cc).
 
 %-----------------------------------------------------------------------------------------------
