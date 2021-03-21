@@ -18,9 +18,9 @@
 -export([get_status/1]).
 
 %-----------------------------------------------------------------------------------------------
--define(DEBUG, true).
+-define(TEST, true).
 
--ifdef(DEBUG).
+-ifdef(TEST).
 -export([start/2, start/3]).
 -endif.
 
@@ -37,7 +37,7 @@
 %-----------------------------------------------------------------------------------------------
 % Interfaces
 %-----------------------------------------------------------------------------------------------
--ifdef(DEBUG).
+-ifdef(TEST).
 
 -spec start(atom(), {string(), pos_integer()}) -> {ok, pid()}.
 % @doc Starts {@module}; for testing only
