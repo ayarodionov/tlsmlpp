@@ -175,9 +175,14 @@ handle_info(_Msg = {report, _Reason}, ST) ->
   ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST};
 
+handle_info(_Msg = {restart, _Reason}, ST) ->
+  ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  spawn(fun() -> tlsmlpp_sup:restart(ST#s_t.name) end),
+  {noreply, ST};
+
 handle_info(_Msg = {stop, _Reason}, ST) ->
   ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
-  tlsmlpp_sup:stop_child(self()),
+  spawn(fun() -> tlsmlpp_sup:stop(ST#s_t.name) end),
   {noreply, ST};
 
 handle_info(_Msg, ST) ->
@@ -244,6 +249,10 @@ do_handshake(Parent, Socket, Credits) ->
 % tcp_client:send(cc, "Hellow server!").
 % tcp_client:get_status(cc).
 %-----------------------------------------------------------------------------------------------
-% tcp_client:send('tcp_client_127.0.0.1:9999', "Hellow server!").
-% 'tcp_client_127.0.0.1:9999' ! {stop, "Do stp!"}.
+% tcp_client:send('tcp_client_127.0.0.1:9999', "Hellow tcp!").
+% tcp_client:send('tcp_client_127.0.0.1:9998', "Hellow ssl!").
+% 'tcp_client_127.0.0.1:9999' ! {restart, "Restart tcp!"}.
+% 'tcp_client_127.0.0.1:9998' ! {restart, "Restart ssl!"}.
+% 'tcp_client_127.0.0.1:9999' ! {stop, "Stop tcp!"}.
+% 'tcp_client_127.0.0.1:9998' ! {stop, "Stop ssl!"}.
 %-----------------------------------------------------------------------------------------------

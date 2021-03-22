@@ -146,21 +146,32 @@ handle_info(_Msg=handshake, ST) ->
 
 handle_info(_Msg={handshake, TLSSocket}, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  ok = inet:setopts(ST#s_t.socket, [{active, true}]),
   ok = ssl:setopts(TLSSocket, [{active, true}]),
   {noreply, ST#s_t{tls_socket = TLSSocket}};
 
-handle_info(Msg={tcp_closed, _Port}, ST) ->
+handle_info(Msg={tcp_closed, _}, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, Msg]),
-  self() ! {stop, Msg},
+  self() ! {restart, Msg},
+  {noreply, ST};
+
+handle_info(Msg={ssl_closed, _}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, Msg]),
+  self() ! {restart, Msg},
   {noreply, ST};
 
 handle_info(_Msg = {report, _Reason}, ST) ->
   ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST};
 
+handle_info(_Msg = {restart, _Reason}, ST) ->
+  ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  spawn(fun() -> tlsmlpp_sup:restart(ST#s_t.name) end),
+  {noreply, ST};
+
 handle_info(_Msg = {stop, _Reason}, ST) ->
   ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
-  tlsmlpp_sup:stop_child(self()),
+  spawn(fun() -> tlsmlpp_sup:stop(ST#s_t.name) end),
   {noreply, ST};
 
 handle_info(_Msg, ST) ->
@@ -229,4 +240,5 @@ do_handshake(Parent, Socket, Credits) ->
 % tcp_server:get_status('tcp_server_127.0.0.1:9999').
 % tlsmlpp_sup:which_children().
 % 'tcp_server_127.0.0.1:9999' ! {tcp_closed,111}.
+% 'tcp_server_127.0.0.1:9998' ! {tcp_closed,111}.
 %-----------------------------------------------------------------------------------------------

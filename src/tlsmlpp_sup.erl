@@ -12,7 +12,7 @@
 %-----------------------------------------------------------------------------------------------
 -export([start_link/0]).
 -export([init/1, get_status/0, which_children/0, count_children/0]).
--export([stop_child/1]).
+-export([restart/1, stop/1]).
 
 %-----------------------------------------------------------------------------------------------
 % -define(TEST, true).
@@ -43,7 +43,7 @@ start_link() ->
 % @doc Initializes {@module} and starts children.
 % Reads parameters from <i>sys.config</i> file. 
 % Parameters consist of tuples:
-% {tcp_server or tcp_client, [list of ]{ipv4, port}, sertificate}]}
+% {tcp_server or tcp_client, [{ipv4, port}, sertificate}]}
 % 
 % For exaple:
 % <pre>
@@ -67,7 +67,7 @@ init([]) ->
     [mk_child(tcp_server, SA) || SA <- application:get_env(tlsmlpp, tcp_server, [])] 
     ++
     [mk_child(tcp_client, SA) || SA <- application:get_env(tlsmlpp, tcp_client, [])],
-  ?LOG_INFO("~p: ChildSpecs=~p~n", [?FUNCTION_NAME, ChildSpecs]),
+  % ?LOG_INFO("~p: ChildSpecs=~p~n", [?FUNCTION_NAME, ChildSpecs]),
   {ok, {SupFlags, ChildSpecs}}.
 
 %-----------------------------------------------------------------------------------------------
@@ -88,13 +88,20 @@ which_children() -> supervisor:which_children(?MODULE).
 % Useful for debugging
 count_children() -> supervisor:count_children(?MODULE).
 
--spec stop_child(pid()) -> ok.
+-spec restart(atom()) -> ok.
 % @doc Stops a child.
-stop_child(Child) -> 
-   ?LOG_INFO("~p: Child=~p~n", [?FUNCTION_NAME, Child]),
-  ok = supervisor:terminate_child(?MODULE, Child),
-  % supervisor:delete_child(Parent_pid, self()),
+restart(Child) ->
+  ?MODULE:stop(Child), 
+  Rc = supervisor:restart_child(?MODULE, Child),
+  ?LOG_INFO("~p: Child=~p Rc=~p~n", [?FUNCTION_NAME, Child, Rc]),
   ok.
+
+-spec stop(atom()) -> ok.
+% @doc Stops a child.
+stop(Child) -> 
+  Rc = supervisor:terminate_child(?MODULE, Child),
+  ?LOG_INFO("~p: Child=~p Rc=~p~n", [?FUNCTION_NAME, Child, Rc]),
+  Rc.
 
 %-----------------------------------------------------------------------------------------------
 %  Private
@@ -133,4 +140,9 @@ mk_child(Module, {Addr, Credits}) ->
     modules => [Module]
   }.
 
+%---------------------------------------------------------------------------------- -------------
+% tlsmlpp_sup:which_children().
+% tlsmlpp_sup:count_children().
+% tlsmlpp_sup:restart('tcp_server_127.0.0.1:9999').
+% tlsmlpp_sup:stop('tcp_server_127.0.0.1:9999').
 %---------------------------------------------------------------------------------- -------------
