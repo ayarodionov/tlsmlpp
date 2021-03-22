@@ -17,7 +17,7 @@
 -export([get_status/1]).
 
 %-----------------------------------------------------------------------------------------------
--define(TEST, true).
+% -define(TEST, true).
 
 -ifdef(TEST).
 -export([start/2, start/3]).
@@ -27,9 +27,9 @@
 -record(s_t, {
   name                :: atom(), % process name
   addr       = false  :: false | {inet:ipv4(), pos_integer()},          
-  socket     = false  :: false | pid(),
-  lsocket    = false  :: false | pid(),
-  tls_socket = false  :: false | pid(),
+  socket     = false  :: false | port(),
+  lsocket    = false  :: false | port(),
+  tls_socket = false  :: false | port(),
   credits    = []     :: [tuple()]
   }).
 -type s_t() :: #s_t{}.
@@ -63,9 +63,9 @@ start_link(Name, Saddr, Credits) ->
 %-----------------------------------------------------------------------------------------------
 -spec init({atom(), {string(), non_neg_integer()}, [tuple()]}) -> {ok, s_t()}.
 % @doc Initializes {@module}  and opens <i>gen_tcp</i> socket
-init({Name, {Addr, Port}, Credits})  -> 
+init(_Msg = {Name, {Addr, Port}, Credits})  -> 
   process_flag(trap_exit, true),
-
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   {ok, Ip} = inet:parse_ipv4strict_address(Addr), 
   {ok, ListenSocket} = gen_tcp:listen(Port, [{reuseaddr, true}, {ip, Ip}]),
   self() ! accept, 
@@ -113,14 +113,18 @@ handle_call(_Msg, _From, ST) ->
 %@doc  This function is called by a <i>gen_server</i> process when a time-out occurs or 
 % when it receives any other message than a synchronous or asynchronous request 
 % (or a system message).
+handle_info(_Msg={ssl, _, _Data}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  {noreply, ST};
+
+handle_info(_Msg={tcp, _Port, _Data}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  {noreply, ST};
+
 handle_info(_Msg=accept, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   Self = self(),
-  spawn(fun() -> 
-    {ok, Socket} = gen_tcp:accept(ST#s_t.lsocket),
-    gen_tcp:controlling_process(Socket, Self),
-    Self ! {accept, Socket}
-    end),
+  spawn(fun() -> do_accept(Self, ST#s_t.lsocket) end),
   {noreply, ST};
 
 handle_info(_Msg={accept, Socket}, ST) ->
@@ -135,15 +139,7 @@ handle_info(_Msg=handshake, ST) ->
   ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   ok = inet:setopts(ST#s_t.socket, [{active, false}, binary]),
   Self = self(),
-  Pid  = spawn(fun() -> 
-      receive
-        {go, Self} ->
-          {ok, TLSSocket} = ssl:handshake(ST#s_t.socket, ST#s_t.credits),
-          gen_tcp:controlling_process(ST#s_t.socket, Self),
-          ssl:controlling_process(TLSSocket, Self),
-          Self ! {handshake, TLSSocket}
-      end
-    end),
+  Pid  = spawn(fun() -> do_handshake(Self, ST#s_t.socket, ST#s_t.credits) end),
   gen_tcp:controlling_process(ST#s_t.socket, Pid),
   Pid ! {go, Self},
   {noreply, ST};
@@ -153,16 +149,18 @@ handle_info(_Msg={handshake, TLSSocket}, ST) ->
   ok = ssl:setopts(TLSSocket, [{active, true}]),
   {noreply, ST#s_t{tls_socket = TLSSocket}};
 
-handle_info(_Msg={ssl, _, _Data}, ST) ->
-  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+handle_info(Msg={tcp_closed, _Port}, ST) ->
+  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, Msg]),
+  self() ! {stop, Msg},
   {noreply, ST};
 
-handle_info(_Msg={tcp, _Port, _Data}, ST) ->
-  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+handle_info(_Msg = {report, _Reason}, ST) ->
+  ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
   {noreply, ST};
 
-handle_info(_Msg={tcp_closed, _Port}, ST) ->
-  ?LOG_DEBUG("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+handle_info(_Msg = {stop, _Reason}, ST) ->
+  ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
+  tlsmlpp_sup:stop_child(self()),
   {noreply, ST};
 
 handle_info(_Msg, ST) ->
@@ -175,9 +173,9 @@ handle_info(_Msg, ST) ->
 % Closes socket.
 terminate(_Msg, ST) ->
   ?LOG_INFO("~p: ~p~n", [?FUNCTION_NAME, _Msg]),
-  ST#s_t.tls_socket andalso ssl:close(ST#s_t.tls_socket),
-  ST#s_t.socket andalso gen_tcp:close(ST#s_t.socket),
-  ST#s_t.lsocket andalso gen_tcp:close(ST#s_t.lsocket),
+  close_socket(ssl, ST#s_t.tls_socket),
+  close_socket(tcp, ST#s_t.socket),
+  close_socket(tcp, ST#s_t.lsocket),
   terminated.
 
 %-----------------------------------------------------------------------------------------------
@@ -186,11 +184,49 @@ terminate(_Msg, ST) ->
 ?RECORD_TF_MAP(s_t).
 
 %-----------------------------------------------------------------------------------------------
+-spec close_socket(tcp | ssl, port()) -> ok.
+% @doc Closes tcp or ssl sockets
+close_socket(_, false) -> ok;
+close_socket(tcp, Socket) -> gen_tcp:close(Socket);
+close_socket(ssl, Socket) -> ssl:close(Socket).
+
+%-----------------------------------------------------------------------------------------------
+-spec do_accept(pid(), port()) -> ok.
+% @doc Accepts tcp socket 
+do_accept(Parent, LSocket) ->
+  case gen_tcp:accept(LSocket) of
+    {ok, Socket} -> 
+      gen_tcp:controlling_process(Socket, Parent),
+      Parent ! {accept, Socket};
+    Error -> 
+      Parent ! {report, Error}
+  end.
+
+%-----------------------------------------------------------------------------------------------
+-spec do_handshake(pid(), port(), [tuple()]) -> ok.
+% @doc Accepts tcp socket 
+do_handshake(Parent, Socket, Credits) ->
+  receive
+    {go, Parent} ->
+      case ssl:handshake(Socket, Credits) of 
+      {ok, TLSSocket} ->  
+        gen_tcp:controlling_process(Socket, Parent),
+        ssl:controlling_process(TLSSocket, Parent),
+        Parent ! {handshake, TLSSocket};
+      Error -> 
+        Parent ! {report, Error}
+      end
+  end.
+
+%-----------------------------------------------------------------------------------------------
 % tcp_server:start(ss, {"127.0.0.1", 9999}).
 % tcp_server:get_status(ss).
-
 %-----------------------------------------------------------------------------------------------
 % tcp_server:start(ss, {"127.0.0.1", 9999}, []).
 % tcp_server:get_status(ss).
-
+%-----------------------------------------------------------------------------------------------
+% supervisor:terminate_child(tlsmlpp_sup, 'tcp_server_127.0.0.1:9999').
+% tcp_server:get_status('tcp_server_127.0.0.1:9999').
+% tlsmlpp_sup:which_children().
+% 'tcp_server_127.0.0.1:9999' ! {tcp_closed,111}.
 %-----------------------------------------------------------------------------------------------

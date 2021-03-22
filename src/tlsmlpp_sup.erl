@@ -12,9 +12,10 @@
 %-----------------------------------------------------------------------------------------------
 -export([start_link/0]).
 -export([init/1, get_status/0, which_children/0, count_children/0]).
+-export([stop_child/1]).
 
 %-----------------------------------------------------------------------------------------------
--define(TEST, true).
+% -define(TEST, true).
 
 -ifdef(TEST).
 -export([mk_name/2, mk_child/2]). 
@@ -59,8 +60,8 @@ start_link() ->
 % </pre>
 init([]) ->
   SupFlags = #{strategy => one_for_one,
-                intensity => 1,
-                period => 5},
+                intensity => 5,
+                period => 100},
   ?LOG_INFO(SupFlags),
   ChildSpecs = 
     [mk_child(tcp_server, SA) || SA <- application:get_env(tlsmlpp, tcp_server, [])] 
@@ -87,6 +88,14 @@ which_children() -> supervisor:which_children(?MODULE).
 % Useful for debugging
 count_children() -> supervisor:count_children(?MODULE).
 
+-spec stop_child(pid()) -> ok.
+% @doc Stops a child.
+stop_child(Child) -> 
+   ?LOG_INFO("~p: Child=~p~n", [?FUNCTION_NAME, Child]),
+  ok = supervisor:terminate_child(?MODULE, Child),
+  % supervisor:delete_child(Parent_pid, self()),
+  ok.
+
 %-----------------------------------------------------------------------------------------------
 %  Private
 %-----------------------------------------------------------------------------------------------
@@ -104,17 +113,24 @@ mk_name(Type, {Ip, Port}) ->
 mk_child(Module, {Addr, default}) ->  mk_child(Module, {Addr, util:default_credits()});
 mk_child(Module, {Addr, Credits}) -> 
 	Name = mk_name(Module, Addr),
-	{
-		Name,                   % child id
-		{
-			Module,               % module name
-			start_link,           % start function
-			[Name, Addr, Credits] % start function arguments
-		}, 
-		permanent,              % restart type
-		10,                     % wait for an exit signal for this time
-		worker,                 % process type
-		[Module]                % modules
-	}.
+	% {
+	% 	Name,                   % child id
+	% 	{
+	% 		Module,               % module name
+	% 		start_link,           % start function
+	% 		[Name, Addr, Credits] % start function arguments
+	% 	}, 
+	% 	permanent,              % restart type
+	% 	10,                     % wait for an exit signal for this time
+	% 	worker,                 % process type
+	% 	[Module]                % modules
+	% }.
+  #{
+    id => Name,
+    start => {Module, start_link, [Name, Addr, Credits]},
+    type => worker,
+    restart => permanent,
+    modules => [Module]
+  }.
 
-%-----------------------------------------------------------------------------------------------
+%---------------------------------------------------------------------------------- -------------
