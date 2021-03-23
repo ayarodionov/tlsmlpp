@@ -1,3 +1,12 @@
+%-----------------------------------------------------------------------------------------------
+% @author Anatoly Rodionov <anatoly.ya.rodionov@gmail.com>
+% @copyright 2021 Anatoly Rodionov
+
+%-----------------------------------------------------------------------------------------------
+% @doc Collection of multiple used utilities.
+% 
+% @end
+%-----------------------------------------------------------------------------------------------
 -module(util).
 
 -export([default_credits/0, default_credits/2]).

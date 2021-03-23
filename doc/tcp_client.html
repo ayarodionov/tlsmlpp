@@ -1,0 +1,107 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Module tcp_client</title>
+<link rel="stylesheet" type="text/css" href="stylesheet.css" title="EDoc">
+</head>
+<body bgcolor="white">
+<div class="navbar"><a name="#navbar_top"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<hr>
+
+<h1>Module tcp_client</h1>
+<ul class="index"><li><a href="#description">Description</a></li><li><a href="#types">Data Types</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>TCP client.
+<p>Copyright © 2021 Anatoly Rodionov</p>
+
+<p><b>Authors:</b> Anatoly Rodionov (<a href="mailto:anatoly.ya.rodionov@gmail.com"><tt>anatoly.ya.rodionov@gmail.com</tt></a>).</p>
+
+<h2><a name="description">Description</a></h2><p>TCP client. Supports clear tcp and tcp over ssl connection.</p>
+
+ See also:
+ <a href="https://erlang.org/doc/apps/ssl/ssl.pdf"> SSL User's Guide</a>
+<h2><a name="types">Data Types</a></h2>
+
+<h3 class="typedecl"><a name="type-s_t">s_t()</a></h3>
+<p><tt>s_t() = #s_t{name = atom(), addr = false | {<a href="inet.html#type-ipv4">inet:ipv4()</a>, pos_integer()}, socket = false | port(), tls_socket = false | port(), credits = [tuple()]}</tt></p>
+
+
+<h2><a name="index">Function Index</a></h2>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#get_status-1">get_status/1</a></td><td>Gets and print state record.</td></tr>
+<tr><td valign="top"><a href="#handle_call-3">handle_call/3</a></td><td>Whenever a <i>gen_server</i> process receives a request sent using <i>call/2,3</i> ,
+ this function is called to handle the request.</td></tr>
+<tr><td valign="top"><a href="#handle_cast-2">handle_cast/2</a></td><td>Whenever a <i>gen_server</i> process receives a request sent using <i>cast/2</i>,
+ this function is called to handle the request.</td></tr>
+<tr><td valign="top"><a href="#handle_info-2">handle_info/2</a></td><td> This function is called by a <i>gen_server</i> process when a time-out occurs or
+ when it receives any other message than a synchronous or asynchronous request
+ (or a system message).</td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td>Initializes tcp_client  and opens <i>gen_tcp</i> socket.</td></tr>
+<tr><td valign="top"><a href="#send-2">send/2</a></td><td>sends data over tcp or ssl socket.</td></tr>
+<tr><td valign="top"><a href="#start_link-2">start_link/2</a></td><td>Starts tcp_client; for testing only.</td></tr>
+<tr><td valign="top"><a href="#start_link-3">start_link/3</a></td><td></td></tr>
+<tr><td valign="top"><a href="#terminate-2">terminate/2</a></td><td>This function is called by a <i>gen_server</i> process when it is about to terminate.</td></tr>
+</table>
+
+<h2><a name="functions">Function Details</a></h2>
+
+<h3 class="function"><a name="get_status-1">get_status/1</a></h3>
+<div class="spec">
+<p><tt>get_status(Name::atom()) -&gt; <a href="#type-s_t">s_t()</a></tt><br></p>
+<p><tt>Name</tt>: registered name<br>
+</p>
+<p>returns: current state</p>
+</div><p>Gets and print state record. For debugging only.</p>
+
+<h3 class="function"><a name="handle_call-3">handle_call/3</a></h3>
+<div class="spec">
+<p><tt>handle_call(Msg::term(), From::{pid(), term()}, ST::<a href="#type-s_t">s_t()</a>) -&gt; <a href="#type-s_t">s_t()</a></tt><br></p>
+</div><p>Whenever a <i>gen_server</i> process receives a request sent using <i>call/2,3</i> ,
+ this function is called to handle the request.</p>
+
+<h3 class="function"><a name="handle_cast-2">handle_cast/2</a></h3>
+<div class="spec">
+<p><tt>handle_cast(Msg::term(), ST::<a href="#type-s_t">s_t()</a>) -&gt; term()</tt><br></p>
+</div><p>Whenever a <i>gen_server</i> process receives a request sent using <i>cast/2</i>,
+ this function is called to handle the request.</p>
+
+<h3 class="function"><a name="handle_info-2">handle_info/2</a></h3>
+<div class="spec">
+<p><tt>handle_info(Msg::timeout | term(), ST::<a href="#type-s_t">s_t()</a>) -&gt; tuple()</tt><br></p>
+</div><p> This function is called by a <i>gen_server</i> process when a time-out occurs or
+ when it receives any other message than a synchronous or asynchronous request
+ (or a system message).</p>
+
+<h3 class="function"><a name="init-1">init/1</a></h3>
+<div class="spec">
+<p><tt>init(Msg::{atom(), {string(), non_neg_integer()}, [tuple()]}) -&gt; {ok, <a href="#type-s_t">s_t()</a>}</tt><br></p>
+</div><p>Initializes tcp_client  and opens <i>gen_tcp</i> socket</p>
+
+<h3 class="function"><a name="send-2">send/2</a></h3>
+<div class="spec">
+<p><tt>send(Name::atom(), Data::string() | binary()) -&gt; ok</tt><br></p>
+<p><tt>Name</tt>: registered name<br>
+<tt>Data</tt>: data to be send<br>
+</p>
+<p>returns: ok</p>
+</div><p>sends data over tcp or ssl socket.</p>
+
+<h3 class="function"><a name="start_link-2">start_link/2</a></h3>
+<div class="spec">
+<p><tt>start_link(Name::atom(), Saddr::{string(), pos_integer()}) -&gt; {ok, pid()}</tt><br></p>
+</div><p>Starts tcp_client; for testing only</p>
+
+<h3 class="function"><a name="start_link-3">start_link/3</a></h3>
+<div class="spec">
+<p><tt>start_link(Name::atom(), Saddr::{string(), pos_integer()}, Credits::[tuple()]) -&gt; {ok, pid()}</tt><br></p>
+</div>
+
+<h3 class="function"><a name="terminate-2">terminate/2</a></h3>
+<div class="spec">
+<p><tt>terminate(Msg::normal | shutdown | {shutdown, term()} | term(), ST::<a href="#type-s_t">s_t()</a>) -&gt; terminated</tt><br></p>
+</div><p>This function is called by a <i>gen_server</i> process when it is about to terminate.
+ Closes socket.</p>
+<hr>
+
+<div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>
+<p><i>Generated by EDoc</i></p>
+</body>
+</html>

@@ -1,4 +1,8 @@
 %-----------------------------------------------------------------------------------------------
+% @author Anatoly Rodionov <anatoly.ya.rodionov@gmail.com>
+% @copyright 2021 Anatoly Rodionov
+
+%-----------------------------------------------------------------------------------------------
 % @doc tlsmlpp top level supervisor.
 % @end
 %-----------------------------------------------------------------------------------------------
@@ -49,12 +53,12 @@ start_link() ->
 % <pre>
   % {tlsmlpp, [
   %   {tcp_server, [
-  %     {{"127.0.0.1", 9999}, []},
-  %     {{"127.0.0.1", 9998}, default}
+  %     {{"127.0.0.1", 9999}, []},       % clear tcp
+  %     {{"127.0.0.1", 9998}, default}   % tcp over ssl
   %   ]},
   %   {tcp_client, [
-  %     {{"127.0.0.1", 9999}, []},
-  %     {{"127.0.0.1", 9998}, default}
+  %     {{"127.0.0.1", 9999}, []},      % clear tcp
+  %     {{"127.0.0.1", 9998}, default}  % tcp over ssl
   %   ]}
   % ]}
 % </pre>
@@ -120,18 +124,6 @@ mk_name(Type, {Ip, Port}) ->
 mk_child(Module, {Addr, default}) ->  mk_child(Module, {Addr, util:default_credits()});
 mk_child(Module, {Addr, Credits}) -> 
 	Name = mk_name(Module, Addr),
-	% {
-	% 	Name,                   % child id
-	% 	{
-	% 		Module,               % module name
-	% 		start_link,           % start function
-	% 		[Name, Addr, Credits] % start function arguments
-	% 	}, 
-	% 	permanent,              % restart type
-	% 	10,                     % wait for an exit signal for this time
-	% 	worker,                 % process type
-	% 	[Module]                % modules
-	% }.
   #{
     id => Name,
     start => {Module, start_link, [Name, Addr, Credits]},

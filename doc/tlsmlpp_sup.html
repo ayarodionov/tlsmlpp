@@ -11,26 +11,63 @@
 
 <h1>Module tlsmlpp_sup</h1>
 <ul class="index"><li><a href="#description">Description</a></li><li><a href="#index">Function Index</a></li><li><a href="#functions">Function Details</a></li></ul>tlsmlpp top level supervisor.
+<p>Copyright © 2021 Anatoly Rodionov</p>
 
 <p><b>Behaviours:</b> <a href="supervisor.html"><tt>supervisor</tt></a>.</p>
+<p><b>Authors:</b> Anatoly Rodionov (<a href="mailto:anatoly.ya.rodionov@gmail.com"><tt>anatoly.ya.rodionov@gmail.com</tt></a>).</p>
 
 <h2><a name="description">Description</a></h2>tlsmlpp top level supervisor.
 <h2><a name="index">Function Index</a></h2>
-<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
-<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td></td></tr>
+<table width="100%" border="1" cellspacing="0" cellpadding="2" summary="function index"><tr><td valign="top"><a href="#count_children-0">count_children/0</a></td><td>Shortcut for supervisor:count_children(?MODULE).</td></tr>
+<tr><td valign="top"><a href="#get_status-0">get_status/0</a></td><td>Retunrs information about tlsmlpp_sup status.</td></tr>
+<tr><td valign="top"><a href="#init-1">init/1</a></td><td></td></tr>
+<tr><td valign="top"><a href="#restart-1">restart/1</a></td><td>Stops a child.</td></tr>
+<tr><td valign="top"><a href="#start_link-0">start_link/0</a></td><td>Starts tlsmlpp_sup.</td></tr>
+<tr><td valign="top"><a href="#stop-1">stop/1</a></td><td>Stops a child.</td></tr>
+<tr><td valign="top"><a href="#which_children-0">which_children/0</a></td><td>Shortcut for supervisor:which_children(?MODULE).</td></tr>
 </table>
 
 <h2><a name="functions">Function Details</a></h2>
 
+<h3 class="function"><a name="count_children-0">count_children/0</a></h3>
+<div class="spec">
+<p><tt>count_children() -&gt; tuple()</tt><br></p>
+</div><p>Shortcut for supervisor:count_children(?MODULE).
+ Useful for debugging</p>
+
+<h3 class="function"><a name="get_status-0">get_status/0</a></h3>
+<div class="spec">
+<p><tt>get_status() -&gt; tuple()</tt><br></p>
+</div><p>Retunrs information about tlsmlpp_sup status.
+ For debugging only
+ For now it is <i>supervisor:which_children(?MODULE)</i>
+ Later some more information can be added</p>
+
 <h3 class="function"><a name="init-1">init/1</a></h3>
 <div class="spec">
-<p><tt>init(X1) -&gt; any()</tt></p>
+<p><tt>init(X1::[]) -&gt; {ok, tuple()}</tt><br></p>
 </div>
+
+<h3 class="function"><a name="restart-1">restart/1</a></h3>
+<div class="spec">
+<p><tt>restart(Child::atom()) -&gt; ok</tt><br></p>
+</div><p>Stops a child.</p>
 
 <h3 class="function"><a name="start_link-0">start_link/0</a></h3>
 <div class="spec">
 <p><tt>start_link() -&gt; any()</tt></p>
-</div>
+</div><p>Starts tlsmlpp_sup</p>
+
+<h3 class="function"><a name="stop-1">stop/1</a></h3>
+<div class="spec">
+<p><tt>stop(Child::atom()) -&gt; ok</tt><br></p>
+</div><p>Stops a child.</p>
+
+<h3 class="function"><a name="which_children-0">which_children/0</a></h3>
+<div class="spec">
+<p><tt>which_children() -&gt; tuple()</tt><br></p>
+</div><p>Shortcut for supervisor:which_children(?MODULE).
+ Useful for debugging</p>
 <hr>
 
 <div class="navbar"><a name="#navbar_bottom"></a><table width="100%" border="0" cellspacing="0" cellpadding="2" summary="navigation bar"><tr><td><a href="overview-summary.html" target="overviewFrame">Overview</a></td><td><a href="http://www.erlang.org/"><img src="erlang.png" align="right" border="0" alt="erlang logo"></a></td></tr></table></div>

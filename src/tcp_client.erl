@@ -1,6 +1,13 @@
 %-----------------------------------------------------------------------------------------------
-% TCP client
-% https://erlang.org/doc/apps/ssl/ssl.pdf
+% @author Anatoly Rodionov <anatoly.ya.rodionov@gmail.com>
+% @copyright 2021 Anatoly Rodionov
+
+%-----------------------------------------------------------------------------------------------
+% @doc TCP client. Supports clear tcp and tcp over ssl connection.
+% 
+% See also:
+% <a href="https://erlang.org/doc/apps/ssl/ssl.pdf"> SSL User's Guide</a>
+% @end
 %-----------------------------------------------------------------------------------------------
 
 -module(tcp_client).
@@ -44,7 +51,6 @@
 start(Name, Saddr) -> start(Name, Saddr,  util:default_credits()).
 
 -spec start(atom(), {string(), pos_integer()}, [tuple()]) -> {ok, pid()}.
-% @doc Starts {@module}; for testing only
 start(Name, Saddr, Credits) ->
   gen_server:start({local, Name}, ?MODULE, {Name, Saddr, Credits}, []).
 
@@ -52,11 +58,9 @@ start(Name, Saddr, Credits) ->
 
 %-----------------------------------------------------------------------------------------------
 -spec start_link(atom(), {string(), pos_integer()}) -> {ok, pid()}.
-% @doc Starts {@module} in plain mode
 start_link(Name, Saddr) -> start_link(Name, Saddr, []).
 
 -spec start_link(atom(), {string(), pos_integer()}, [tuple()]) -> {ok, pid()}.
-% @doc Starts {@module} with TLS encription
 start_link(Name, Saddr, Credits) ->
   gen_server:start_link({local, Name}, ?MODULE, {Name, Saddr, Credits}, []).
 
@@ -234,8 +238,8 @@ do_handshake(Parent, Socket, Credits) ->
           gen_tcp:controlling_process(Socket, Parent),
           ssl:controlling_process(TLSSocket, Parent),
           Parent ! {handshake, TLSSocket};
-      Error -> 
-        Parent ! {report, Error}
+        Error -> 
+          Parent ! {report, Error}
       end
   end.
 
