@@ -5,7 +5,7 @@
 %-----------------------------------------------------------------------------------------------
 % @doc MLLP coder and decoder
 % 
-% See < a href="https://www.hl7.org/documentcenter/public/wg/inm/mllp_transport_specification.PDF">mlpp specification</a>
+% See <a href="https://www.hl7.org/documentcenter/public/wg/inm/mllp_transport_specification.PDF">mlpp specification</a>
 % @end
 %-----------------------------------------------------------------------------------------------
 -ifndef(MLPP).
@@ -22,7 +22,7 @@
 %-----------------------------------------------------------------------------------------------
 -spec encode(string() | binary()) -> binary().
 % @doc Encodes to MLLP fort
-encode(Msg) when is_list(Msg)   -> <<?SB:8,(list_to_binary(Msg))/binary, ?EB:8,?CR:8>>;
+encode(Msg) when is_list(Msg)   -> <<?SB:8,(list_to_binary(Msg))/binary,?EB:8,?CR:8>>;
 encode(Msg) when is_binary(Msg) -> <<?SB:8,Msg/binary,?EB:8,?CR:8>>.
 
 %-----------------------------------------------------------------------------------------------
@@ -30,7 +30,7 @@ encode(Msg) when is_binary(Msg) -> <<?SB:8,Msg/binary,?EB:8,?CR:8>>.
 % @doc Decodes from MLLP format
 decode(<<?SB:8,M/binary>>) ->
 	L = byte_size(M) - 2,
-	<<Msg:L/binary, ?EB:8,?CR:8>> = M,  
+	<<Msg:L/binary,?EB:8,?CR:8>> = M,  
 	Msg.
 
 %-----------------------------------------------------------------------------------------------

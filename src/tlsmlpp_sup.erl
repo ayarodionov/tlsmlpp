@@ -47,7 +47,7 @@ start_link() ->
 % @doc Initializes {@module} and starts children.
 % Reads parameters from <i>sys.config</i> file. 
 % Parameters consist of tuples:
-% {tcp_server or tcp_client, [{ipv4, port}, sertificate}]}
+% {tcp_server or tcp_client, [{ipv4, port}, certificate}]}
 % 
 % For exaple:
 % <pre>
@@ -76,7 +76,7 @@ init([]) ->
 
 %-----------------------------------------------------------------------------------------------
 -spec get_status() -> tuple().
-% @doc Retunrs information about {@module} status.
+% @doc Returns information about {@module} status.
 % For debugging only
 % For now it is <i>supervisor:which_children(?MODULE)</i>
 % Later some more information can be added

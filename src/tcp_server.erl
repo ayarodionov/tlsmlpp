@@ -61,7 +61,7 @@ start(Name, Saddr, Credits) ->
 start_link(Name, Saddr) -> start_link(Name, Saddr, []).
 
 -spec start_link(atom(), {string(), pos_integer()}, [tuple()]) -> {ok, pid()}.
-% @doc Starts {@module} with TLS encription
+% @doc Starts {@module} with TLS encryption
 start_link(Name, Saddr, Credits) ->
   gen_server:start_link({local, Name}, ?MODULE, {Name, Saddr, Credits}, []).
 

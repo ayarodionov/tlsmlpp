@@ -246,15 +246,15 @@ do_handshake(Parent, Socket, Credits) ->
 %-----------------------------------------------------------------------------------------------
 % tcp_client:start(cc, {"127.0.0.1", 9999}).
 % tcp_server:get_status(cc).
-% tcp_client:send(cc, "Hellow server!").
+% tcp_client:send(cc, "Hello server!").
 
 %-----------------------------------------------------------------------------------------------
 % tcp_client:start(cc, {"127.0.0.1", 9999}, []).
-% tcp_client:send(cc, "Hellow server!").
+% tcp_client:send(cc, "Hello server!").
 % tcp_client:get_status(cc).
 %-----------------------------------------------------------------------------------------------
-% tcp_client:send('tcp_client_127.0.0.1:9999', "Hellow tcp!").
-% tcp_client:send('tcp_client_127.0.0.1:9998', "Hellow ssl!").
+% tcp_client:send('tcp_client_127.0.0.1:9999', "Hello tcp!").
+% tcp_client:send('tcp_client_127.0.0.1:9998', "Hello ssl!").
 % 'tcp_client_127.0.0.1:9999' ! {restart, "Restart tcp!"}.
 % 'tcp_client_127.0.0.1:9998' ! {restart, "Restart ssl!"}.
 % 'tcp_client_127.0.0.1:9999' ! {stop, "Stop tcp!"}.
